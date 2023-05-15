@@ -43,7 +43,7 @@ import org.mobilitydata.gtfsvalidator.validator.TranslationFieldAndReferenceVali
 
 @RunWith(JUnit4.class)
 public final class TranslationFieldAndReferenceValidatorTest {
-  private static final GtfsAgency AGENCY = new GtfsAgency.Builder().setAgencyId("agency0").build();
+  private static final GtfsAgency AGENCY = new GtfsAgency.Builder().setAgencyId("agency0").setAgencyEmail("test@gmail.com").build();
   private static final GtfsStopTime STOP_TIME =
       new GtfsStopTime.Builder().setTripId("trip0").setStopSequence(0).build();
   private static final GtfsFeedInfo FEED_INFO =
@@ -262,5 +262,69 @@ public final class TranslationFieldAndReferenceValidatorTest {
     assertThat(
             generateNotices(new CsvHeader(NEW_FORMAT_CSV_HEADERS), ImmutableList.of(translation)))
         .containsExactly(new TranslationForeignKeyViolationNotice(translation));
+  }
+
+
+  @Test
+  public void wrongFieldName_yieldsNotice() {
+    GtfsTranslation translation =
+            new GtfsTranslation.Builder()
+                    .setCsvRowNumber(2)
+                    .setTableName("agency")
+                    .setFieldName("any")
+                    .setFieldValue("anyAgency")
+                    .setLanguage(Locale.forLanguageTag("en"))
+                    .build();
+    assertThat(
+            generateNotices(new CsvHeader(NEW_FORMAT_CSV_HEADERS), ImmutableList.of(translation)))
+            .containsExactly(
+                    new TranslationFieldAndReferenceValidator.TranslationUnexpectedNameNotice(translation,translation.fieldName()));
+  }
+
+  @Test
+  public void valueNotFound_yieldsNotice_1() {
+    GtfsTranslation translation =
+            new GtfsTranslation.Builder()
+                    .setCsvRowNumber(2)
+                    .setTableName("agency")
+                    .setFieldName("agency_email")
+                    .setFieldValue("anyAgency")
+                    .setLanguage(Locale.forLanguageTag("en"))
+                    .build();
+    assertThat(
+            generateNotices(new CsvHeader(NEW_FORMAT_CSV_HEADERS), ImmutableList.of(translation)))
+            .containsExactly(
+                    new TranslationFieldAndReferenceValidator.TranslationNotFoundValueNotice(translation,translation.fieldName(),translation.fieldValue()));
+  }
+
+  @Test
+  public void valueNotFound_yieldsNotice_2() {
+    GtfsTranslation translation =
+            new GtfsTranslation.Builder()
+                    .setCsvRowNumber(2)
+                    .setTableName("agency")
+                    .setFieldName("agency_url")
+                    .setFieldValue("test@gmail.com")
+                    .setLanguage(Locale.forLanguageTag("en"))
+                    .build();
+    assertThat(
+            generateNotices(new CsvHeader(NEW_FORMAT_CSV_HEADERS), ImmutableList.of(translation)))
+            .containsExactly(
+                    new TranslationFieldAndReferenceValidator.TranslationNotFoundValueNotice(translation,translation.fieldName(),translation.fieldValue()));
+  }
+
+  @Test
+  public void valueFound_yieldsNotice() {
+    GtfsTranslation translation =
+            new GtfsTranslation.Builder()
+                    .setCsvRowNumber(2)
+                    .setTableName("agency")
+                    .setFieldName("agency_email")
+                    .setFieldValue("test@gmail.com")
+                    .setLanguage(Locale.forLanguageTag("en"))
+                    .build();
+    assertThat(
+            generateNotices(new CsvHeader(NEW_FORMAT_CSV_HEADERS), ImmutableList.of(translation)))
+            .isEmpty();
   }
 }

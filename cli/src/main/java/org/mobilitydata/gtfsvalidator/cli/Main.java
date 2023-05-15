@@ -37,6 +37,8 @@ public class Main {
   private static final String NOTICE_SCHEMA_JSON = "notice_schema.json";
 
   public static void main(String[] argv) {
+    // todo:test
+    argv = new String[] {"-u", "https://github.com/MobilityData/gtfs-validator/files/11140206/cctbus-mn-usTEST.zip","-o","output"};
     Arguments args = new Arguments();
     JCommander jCommander = new JCommander(args);
     jCommander.parse(argv);
